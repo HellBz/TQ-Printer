@@ -1531,6 +1531,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.10</b> &mdash; CI: normal commits now use --only-compilation-database for a faster syntax/build-database check.</li>
 <li><b>2.9.9</b> &mdash; Added GitHub / Documentation link in the page footer.</li>
 <li><b>2.9.8</b> &mdash; Configurable print area roll width, HTML pages streamed in chunks, template preview page.</li>
 <li><b>2.9.7</b> &mdash; State-changing endpoints (delete, counter, print, orientation test) now require POST; security hardening.</li>
