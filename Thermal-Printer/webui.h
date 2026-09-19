@@ -1542,6 +1542,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.15</b> &mdash; Split GitHub Actions into Syntax Check and Build/Release workflows.</li>
 <li><b>2.9.14</b> &mdash; HTML page titles now use "TQ-Printer - &lt;page&gt;" format.</li>
 <li><b>2.9.13</b> &mdash; Release asset renamed to TQ-Printer.bin; supports static latest-release URL for OTA.</li>
 <li><b>2.9.12</b> &mdash; Improved GitHub link styling in the page footer.</li>
