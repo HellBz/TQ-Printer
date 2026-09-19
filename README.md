@@ -13,6 +13,39 @@ ESP32-S3 based queue number / thermal printer firmware for the MY-Q805K.
 - GPIO trigger button support
 - Modular code structure
 
+## Screenshots
+
+Add your screenshots to the `screenshots/` folder. The README expects
+the following file names:
+
+- `screenshots/main.png` – main dashboard
+- `screenshots/templates.png` – template editor
+- `screenshots/files.png` – image / file manager
+- `screenshots/settings.png` – settings page
+- `screenshots/ota.png` – OTA firmware update page
+
+### Main dashboard
+
+Replace this placeholder with a screenshot of the dashboard.
+
+![Main dashboard](screenshots/main.png)
+
+### Template editor
+
+![Template editor](screenshots/templates.png)
+
+### Image / file manager
+
+![Image / file manager](screenshots/files.png)
+
+### Settings
+
+![Settings](screenshots/settings.png)
+
+### OTA firmware update
+
+![OTA firmware update](screenshots/ota.png)
+
 ## Hardware
 
 - **Controller:** ESP32-S3 (N16R8 recommended: 16 MB Flash, 8 MB PSRAM)
@@ -39,10 +72,9 @@ Thermo-Printer/
 │   ├── webui.h                  # Web UI, HTTP handlers and routes
 │   └── API.md                   # REST API documentation
 ├── flash.py                     # Local build & flash helper (Python)
-├── flash.bat                    # Windows wrapper for flash.py
-├── AGENTS.md                    # Project notes for agents/developers
+├── screenshots/                 # UI screenshots for the README
 ├── README.md                    # This file
-└── .github/workflows/release.yml # GitHub Actions CI/CD
+└── .github/workflows/            # GitHub Actions CI/CD
 ```
 
 ## Quick start
