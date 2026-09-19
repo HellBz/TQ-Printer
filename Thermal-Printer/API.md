@@ -75,13 +75,15 @@ POST /api/template?action=delete&name=<name>
 ### Nächstes Ticket drucken
 
 ```text
-GET /api/print-next
+POST /api/print-next
+Body (optional): date=YYYY-MM-DD&time=HH:MM:SS
 ```
 
 ### Bestimmte Ticketnummer drucken
 
 ```text
-GET /api/print-specific?number=<nummer>
+POST /api/print-specific
+Body: number=<nummer>&date=YYYY-MM-DD&time=HH:MM:SS
 ```
 
 ## Counter
@@ -94,13 +96,14 @@ Ein eigener Endpunkt ist aktuell nicht implementiert.
 ### Counter setzen
 
 ```text
-GET /api/counter/set?value=<nummer>
+POST /api/counter/set
+Body: value=<nummer>
 ```
 
 ### Counter zurücksetzen
 
 ```text
-GET /api/counter/reset
+POST /api/counter/reset
 ```
 
 ## WLAN

@@ -109,6 +109,14 @@ Die wichtigsten Endpunkte für externe Steuerung und Automatisierung:
 
 Authentifizierung erfolgt per HTTP Basic Auth (`admin` / Inhalt von `/admin.txt`), falls vorhanden.
 
+## Versionskontrolle & Releases
+- Lokales Git-Repository wurde initialisiert (siehe `git log`).
+- `.gitignore` ignoriert Build-Output, `arduino-cli.exe`, Backups und IDE/OS-Dateien.
+- GitHub Actions Workflow liegt unter `.github/workflows/release.yml`:
+  - Jeder Push auf `main`/`master` kompiliert die Firmware.
+  - Jeder Tag `v*` erzeugt automatisch ein GitHub-Release und hängt `Thermal-Printer.ino.bin` an.
+- README.md enthält die Anleitung für Repository, Build und Release.
+
 ## Hinweise für Änderungen
 - HTML-Ausgaben werden in `String` zusammengebaut; bei größeren Seiten kann Heap-Fragmentierung entstehen.
 - Admin-Authentifizierung erfolgt per HTTP Basic Auth (`admin` / Inhalt von `/admin.txt`).

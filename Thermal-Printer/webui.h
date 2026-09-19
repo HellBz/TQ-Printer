@@ -484,16 +484,32 @@ function timestamp()
     };
 }
 
+async function postForm(url, params)
+{
+    return fetch(
+        url,
+        {
+            method: "POST",
+            headers:
+            {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams(params).toString()
+        }
+    );
+}
+
 async function printNext()
 {
     const t = timestamp();
 
     const response =
-        await fetch(
-            "/api/print-next?date=" +
-            encodeURIComponent(t.date) +
-            "&time=" +
-            encodeURIComponent(t.time)
+        await postForm(
+            "/api/print-next",
+            {
+                date: t.date,
+                time: t.time
+            }
         );
 
     document.getElementById(
@@ -523,13 +539,13 @@ async function printSpecific()
     const t = timestamp();
 
     const response =
-        await fetch(
-            "/api/print-specific?number=" +
-            encodeURIComponent(number) +
-            "&date=" +
-            encodeURIComponent(t.date) +
-            "&time=" +
-            encodeURIComponent(t.time)
+        await postForm(
+            "/api/print-specific",
+            {
+                number: number,
+                date: t.date,
+                time: t.time
+            }
         );
 
     alert(
@@ -544,10 +560,13 @@ async function setCounter()
             "counterValue"
         ).value;
 
-    await fetch(
-        "/api/counter/set?value=" +
-        encodeURIComponent(value)
-    );
+    const response =
+        await postForm(
+            "/api/counter/set",
+            { value: value }
+        );
+
+    alert(await response.text());
 
     location.reload();
 }
@@ -563,9 +582,13 @@ async function resetCounter()
         return;
     }
 
-    await fetch(
-        "/api/counter/reset"
-    );
+    const response =
+        await postForm(
+            "/api/counter/reset",
+            {}
+        );
+
+    alert(await response.text());
 
     location.reload();
 }
@@ -796,16 +819,15 @@ SAVE TEMPLATE
 </button>
 </form>
 
-<a class="button red"
-href="/template/delete?name=)rawliteral";
+<form action="/template/delete" method="post" onsubmit="return confirmDelete('Delete this template permanently?');">
+<input type="hidden" name="name" value=")rawliteral";
 
     html +=
-        htmlEscape(editName);
+        "'" + htmlEscape(editName) + "'";
 
-    html += R"rawliteral("
-onclick="return confirmDelete('Delete this template permanently?');">
-DELETE TEMPLATE
-</a>
+    html += R"rawliteral(>
+<button type="submit" class="red">DELETE TEMPLATE</button>
+</form>
 
 <h3>Template commands</h3>
 
@@ -1113,9 +1135,12 @@ function uploadFile()
 
                 html +=
                     "<td>"
-                    "<a class='button red' href='/file/delete?name=" +
+                    "<form action='/file/delete' method='post' style='display:inline' onsubmit=\"return confirmDelete('Delete this image permanently?');\">"
+                    "<input type='hidden' name='name' value='" +
                     htmlEscape(filename) +
-                    "' onclick=\"return confirmDelete('Delete this image permanently?');\">DELETE</a>"
+                    "'>"
+                    "<button type='submit' class='red'>DELETE</button>"
+                    "</form>"
                     "</td>";
 
                 html +=
@@ -1177,6 +1202,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.7</b> &mdash; State-changing endpoints (delete, counter, print, orientation test) now require POST; security hardening.</li>
 <li><b>2.9.6</b> &mdash; Moved TQ-Printer branding into the fixed page header; dashboard title is now "Dashboard".</li>
 <li><b>2.9.5</b> &mdash; Renamed product branding to TQ-Printer across Web-UI, auth realm and documentation.</li>
 <li><b>2.9.4</b> &mdash; Added in-device changelog on the General Settings tab.</li>
@@ -1317,7 +1343,9 @@ void handleSettings()
 <p class="small">The selected direction is saved for web printing, GPIO14 and future triggers.</p>
 
 <button class="green">SAVE PRINTER SETTINGS</button>
-<a class="button blue" href="/printer/orientation-test">TEST DIRECTION</a>
+</form>
+<form action="/printer/orientation-test" method="post">
+<button type="submit" class="button blue">TEST DIRECTION</button>
 </form>
 </div>
 </div>
@@ -3146,25 +3174,25 @@ void setupRoutes()
 
     server.on(
         "/api/print-next",
-        HTTP_GET,
+        HTTP_POST,
         handlePrintNext
     );
 
     server.on(
         "/api/print-specific",
-        HTTP_GET,
+        HTTP_POST,
         handlePrintSpecific
     );
 
     server.on(
         "/api/counter/set",
-        HTTP_GET,
+        HTTP_POST,
         handleSetCounter
     );
 
     server.on(
         "/api/counter/reset",
-        HTTP_GET,
+        HTTP_POST,
         handleResetCounter
     );
 
@@ -3188,7 +3216,7 @@ void setupRoutes()
 
     server.on(
         "/template/delete",
-        HTTP_GET,
+        HTTP_POST,
         handleTemplateDelete
     );
 
@@ -3242,7 +3270,7 @@ void setupRoutes()
 
     server.on(
         "/printer/orientation-test",
-        HTTP_GET,
+        HTTP_POST,
         handleOrientationTest
     );
 
@@ -3261,7 +3289,7 @@ void setupRoutes()
 
     server.on(
         "/file/delete",
-        HTTP_GET,
+        HTTP_POST,
         handleDeleteFile
     );
 
