@@ -5,6 +5,8 @@
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <Update.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 
 #include "globals.h"
 #include "storage.h"
@@ -1531,6 +1533,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.11</b> &mdash; OTA update can now be performed from a URL (e.g. GitHub release asset).</li>
 <li><b>2.9.10</b> &mdash; CI: normal commits now use --only-compilation-database for a faster syntax/build-database check.</li>
 <li><b>2.9.9</b> &mdash; Added GitHub / Documentation link in the page footer.</li>
 <li><b>2.9.8</b> &mdash; Configurable print area roll width, HTML pages streamed in chunks, template preview page.</li>
@@ -2741,6 +2744,18 @@ UPDATE FIRMWARE
 </button>
 </form>
 
+<h2>Update from URL</h2>
+<p class="small">
+Enter a direct link to a compiled .bin file (e.g. a GitHub release asset).
+The device will download and install it automatically.
+</p>
+<input type="text" id="otaUrl" placeholder="https://github.com/.../TQ-Printer_v2.9.10.bin" style="width:100%;margin-bottom:12px;">
+<button type="button" class="blue" onclick="updateFromUrl()">
+UPDATE FROM URL
+</button>
+
+<div id="otaUrlStatus" class="small"></div>
+
 <div id="otaProgress"
 style="width:100%;height:8px;background:#333;border-radius:4px;margin-top:12px;display:none;">
 <div id="otaBar"
@@ -2802,6 +2817,46 @@ function uploadFirmware()
     xhr.open('POST', '/ota/upload');
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.send(formData);
+}
+
+function updateFromUrl()
+{
+    var urlInput = document.getElementById('otaUrl');
+    var url = urlInput.value.trim();
+    var status = document.getElementById('otaUrlStatus');
+
+    if (!url)
+    {
+        status.textContent = 'Please enter a firmware URL.';
+        return;
+    }
+
+    status.textContent = 'Downloading and installing firmware...';
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/ota/url');
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+    xhr.onload = function()
+    {
+        try
+        {
+            var resp = JSON.parse(xhr.responseText);
+            status.textContent = resp.message || resp.error || 'Done.';
+        }
+        catch (err)
+        {
+            status.textContent = xhr.status === 200 ? 'Update finished.' : 'Update error.';
+        }
+    };
+
+    xhr.onerror = function()
+    {
+        status.textContent = 'Update error.';
+    };
+
+    xhr.send('url=' + encodeURIComponent(url));
 }
 </script>
 
@@ -2969,6 +3024,189 @@ void handleOTAComplete()
                 error
             );
         }
+    }
+}
+
+void handleOTAUrl()
+{
+    if (!requireAdmin()) return;
+
+    String url =
+        server.arg("url");
+
+    url.trim();
+
+    if (url.length() == 0)
+    {
+        sendJsonResponse(
+            400,
+            "{\"ok\":false,\"error\":\"Firmware URL is required\"}"
+        );
+
+        return;
+    }
+
+    const bool secure =
+        url.startsWith("https://");
+
+    WiFiClientSecure secureClient;
+    WiFiClient plainClient;
+
+    secureClient.setInsecure();
+
+    HTTPClient http;
+
+    if (secure)
+    {
+        http.begin(
+            secureClient,
+            url
+        );
+    }
+    else
+    {
+        http.begin(
+            plainClient,
+            url
+        );
+    }
+
+    http.setFollowRedirects(
+        HTTPC_STRICT_FOLLOW_REDIRECTS
+    );
+
+    const int httpCode =
+        http.GET();
+
+    if (httpCode != 200)
+    {
+        http.end();
+
+        sendJsonResponse(
+            500,
+            "{\"ok\":false,\"error\":\"Download failed, HTTP " +
+            String(httpCode) +
+            "\"}"
+        );
+
+        return;
+    }
+
+    int len = http.getSize();
+
+    if (len <= 0)
+    {
+        http.end();
+
+        sendJsonResponse(
+            500,
+            "{\"ok\":false,\"error\":\"Could not determine firmware size\"}"
+        );
+
+        return;
+    }
+
+    if (!Update.begin(len))
+    {
+        http.end();
+
+        sendJsonResponse(
+            500,
+            "{\"ok\":false,\"error\":\"" +
+            String(Update.errorString()) +
+            "\"}"
+        );
+
+        return;
+    }
+
+    WiFiClient* stream =
+        http.getStreamPtr();
+
+    size_t written = 0;
+    uint8_t buffer[1024];
+    unsigned long lastActivity =
+        millis();
+
+    while (
+        http.connected() &&
+        (len > 0 || len == -1)
+    )
+    {
+        size_t available =
+            stream->available();
+
+        if (available)
+        {
+            int bytesRead =
+                stream->readBytes(
+                    buffer,
+                    min(
+                        static_cast<size_t>(1024),
+                        available
+                    )
+                );
+
+            written +=
+                Update.write(
+                    buffer,
+                    bytesRead
+                );
+
+            if (len > 0)
+            {
+                len -= bytesRead;
+            }
+
+            lastActivity = millis();
+        }
+        else
+        {
+            if (
+                millis() - lastActivity >
+                30000
+            )
+            {
+                Update.abort();
+                http.end();
+
+                sendJsonResponse(
+                    500,
+                    "{\"ok\":false,\"error\":\"Download timeout\"}"
+                );
+
+                return;
+            }
+
+            delay(1);
+        }
+    }
+
+    http.end();
+
+    if (
+        Update.end() &&
+        !Update.hasError()
+    )
+    {
+        sendJsonResponse(
+            200,
+            "{\"ok\":true,\"message\":\"OTA update complete. The device is restarting.\"}"
+        );
+
+        delay(500);
+        ESP.restart();
+    }
+    else
+    {
+        Update.abort();
+
+        sendJsonResponse(
+            500,
+            "{\"ok\":false,\"error\":\"" +
+            String(Update.errorString()) +
+            "\"}"
+        );
     }
 }
 
@@ -3642,6 +3880,12 @@ void setupRoutes()
         HTTP_POST,
         handleOTAComplete,
         handleOTAUploadData
+    );
+
+    server.on(
+        "/ota/url",
+        HTTP_POST,
+        handleOTAUrl
     );
 
     server.onNotFound(
