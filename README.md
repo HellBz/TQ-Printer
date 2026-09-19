@@ -2,6 +2,12 @@
 
 ESP32-S3 based queue number / thermal printer firmware for the MY-Q805K.
 
+<p align="center">
+  <img src="screenshots/main.png" alt="TQ-Printer dashboard" width="700">
+</p>
+
+TQ-Printer provides a web-based dashboard to configure Wi-Fi, edit ticket templates, upload images, control the counter and update the firmware over the air.
+
 ## Features
 
 - Web UI for configuration, templates, images and printing
@@ -15,36 +21,18 @@ ESP32-S3 based queue number / thermal printer firmware for the MY-Q805K.
 
 ## Screenshots
 
-Add your screenshots to the `screenshots/` folder. The README expects
-the following file names:
+The remaining pages are shown below in a 2×2 grid.
 
-- `screenshots/main.png` – main dashboard
-- `screenshots/templates.png` – template editor
-- `screenshots/files.png` – image / file manager
-- `screenshots/settings.png` – settings page
-- `screenshots/ota.png` – OTA firmware update page
-
-### Main dashboard
-
-Replace this placeholder with a screenshot of the dashboard.
-
-![Main dashboard](screenshots/main.png)
-
-### Template editor
-
-![Template editor](screenshots/templates.png)
-
-### Image / file manager
-
-![Image / file manager](screenshots/files.png)
-
-### Settings
-
-![Settings](screenshots/settings.png)
-
-### OTA firmware update
-
-![OTA firmware update](screenshots/ota.png)
+<table>
+  <tr>
+    <td align="center"><b>Template editor</b><br><img src="screenshots/templates.png" alt="Template editor" width="100%"></td>
+    <td align="center"><b>Image / file manager</b><br><img src="screenshots/files.png" alt="Image / file manager" width="100%"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Settings</b><br><img src="screenshots/settings.png" alt="Settings" width="100%"></td>
+    <td align="center"><b>OTA firmware update</b><br><img src="screenshots/ota.png" alt="OTA firmware update" width="100%"></td>
+  </tr>
+</table>
 
 ## Hardware
 
@@ -121,7 +109,7 @@ See [`Thermal-Printer/API.md`](Thermal-Printer/API.md) for the full API document
 This repository includes a GitHub Actions workflow that:
 
 1. Compiles the firmware on every push to `main`/`master`.
-2. Creates a GitHub Release and attaches `Thermal-Printer.ino.bin` when you push a tag starting with `v`.
+2. Creates a GitHub Release and attaches `TQ-Printer.bin` when you push a tag starting with `v`.
 
 ### Create a release
 
