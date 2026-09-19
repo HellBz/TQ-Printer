@@ -1,0 +1,210 @@
+ESP32-S3 N16R8 – Ticket Printer Pinout Reference
+================================================
+
+Purpose
+-------
+This document describes the board pinout shown in the supplied image and the
+GPIO assignments currently used by the ESP32-S3 thermal ticket printer project.
+
+Use this as a reference when changing firmware or adding new hardware so that
+reserved or already-used pins are not reassigned accidentally.
+
+
+CURRENT TICKET PRINTER ASSIGNMENTS
+----------------------------------
+
+GPIO17  -> Printer RXD
+           ESP32-S3 U1TXD
+           Status: USED
+
+GPIO18  <- Printer TXD
+           ESP32-S3 U1RXD
+           Status: USED
+
+GPIO14  -> Physical trigger button
+           Button connected to GND
+           Firmware uses INPUT_PULLUP
+           Status: USED
+
+GPIO38  -> SD_CMD
+           Built-in SD card
+           Status: RESERVED
+
+GPIO39  -> SD_CLK
+           Built-in SD card
+           Status: RESERVED
+
+GPIO40  -> SD_DATA
+           Built-in SD card
+           Status: RESERVED
+
+GPIO35  -> PSRAM
+GPIO36  -> PSRAM
+GPIO37  -> PSRAM
+           Status: RESERVED
+
+GPIO19  -> USB D+
+           Also U1RTS / ADC2_CH8
+           Status: AVOID if native USB is required
+
+GPIO20  -> USB D-
+           Also U1CTS / ADC2_CH9
+           Status: AVOID if native USB is required
+
+GPIO0   -> BOOT
+           Status: AVOID for normal peripherals
+
+GPIO43  -> U0TXD / TX LED
+           Status: SYSTEM / DEBUG
+
+GPIO44  -> U0RXD / RX LED
+           Status: SYSTEM / DEBUG
+
+GPIO2   -> Onboard LED
+           Also ADC1_CH1 / T2
+
+GPIO48  -> Onboard WS2812 RGB LED
+
+
+THERMAL PRINTER CONNECTION
+--------------------------
+
+ESP32-S3 GPIO17 / U1TXD  -> Printer RXD
+ESP32-S3 GPIO18 / U1RXD  <- Printer TXD
+ESP32-S3 GND             -> Printer GND
+
+Printer UART:
+- 1,500,000 baud
+- 8N1
+- 3.3 V TTL
+
+Important:
+Do not connect the ESP32 TTL UART directly to an RS-232-level interface.
+
+
+BUILT-IN SD CARD
+----------------
+
+The built-in SD card slot uses:
+
+GPIO40 -> SD_DATA
+GPIO39 -> SD_CLK
+GPIO38 -> SD_CMD
+
+Firmware should use SD_MMC in 1-bit mode.
+
+Do not reuse GPIO38, GPIO39 or GPIO40 for other peripherals while the built-in
+SD card is active.
+
+
+PSRAM
+-----
+
+GPIO35 -> PSRAM
+GPIO36 -> PSRAM
+GPIO37 -> PSRAM
+
+The board is an N16R8 variant:
+- 16 MB Flash
+- 8 MB PSRAM
+
+Treat GPIO35, GPIO36 and GPIO37 as reserved.
+
+
+USB
+---
+
+GPIO19 -> USB D+
+GPIO20 -> USB D-
+
+Do not assign these pins to unrelated hardware if native USB must remain usable.
+
+
+CAMERA-LABELLED PINS
+--------------------
+
+GPIO4  -> CAM_SIOD / ADC1_CH3 / T4
+GPIO5  -> CAM_SIOC / ADC1_CH4 / T5
+GPIO6  -> CAM_VSYNC / ADC1_CH5 / T6
+GPIO7  -> CAM_HREF / ADC1_CH6 / T7
+GPIO15 -> CAM_XCLK / ADC2_CH4 / U0RTS
+GPIO16 -> CAM_Y9 / ADC2_CH5 / U0CTS
+GPIO17 -> CAM_Y8 / ADC2_CH6 / U1TXD
+GPIO18 -> CAM_Y7 / ADC2_CH7 / U1RXD
+GPIO8  -> CAM_Y4 / ADC1_CH7 / T8
+GPIO9  -> CAM_Y3 / ADC1_CH8 / T9
+GPIO10 -> CAM_Y5 / ADC1_CH9 / T10
+GPIO11 -> CAM_Y2 / ADC2_CH0 / T11
+GPIO12 -> CAM_Y6 / ADC2_CH1 / T12
+GPIO13 -> CAM_PCLK / ADC2_CH2 / T13
+
+If a camera is added later, these assignments must be considered before choosing
+GPIOs for other peripherals.
+
+
+JTAG / SPECIAL FUNCTIONS
+------------------------
+
+GPIO3  -> JTAG_EN / ADC1_CH2 / T3
+GPIO42 -> MTMS
+GPIO41 -> MTDI
+GPIO40 -> MTDO / SD_DATA
+GPIO39 -> MTCK / SD_CLK
+GPIO45 -> VSPI
+GPIO46 -> LOG
+
+
+OTHER EXPOSED GPIOs
+-------------------
+
+GPIO1  -> ADC1_CH0 / T1
+GPIO21 -> General-purpose GPIO
+GPIO47 -> General-purpose GPIO
+
+
+GPIO SELECTION RULES FOR FUTURE HARDWARE
+----------------------------------------
+
+1. Do not reassign GPIO17 or GPIO18 unless the printer UART is moved.
+2. Do not reassign GPIO14 while the physical trigger button is enabled.
+3. Keep GPIO38, GPIO39 and GPIO40 reserved for the built-in SD card.
+4. Keep GPIO35, GPIO36 and GPIO37 reserved for PSRAM.
+5. Avoid GPIO19 and GPIO20 when native USB is needed.
+6. Avoid GPIO0 because it is the BOOT pin.
+7. Treat GPIO43 and GPIO44 as UART0 / debug pins.
+8. GPIO2 and GPIO48 already have onboard LED functions.
+9. Consider future camera use before assigning GPIO4-13 or GPIO15-18.
+10. Always check the current firmware assignments before adding hardware.
+
+
+COMPACT AI CONTEXT
+------------------
+
+ESP32-S3 N16R8 Ticket Printer hardware:
+
+GPIO17 -> thermal printer RXD (ESP U1TXD) [USED]
+GPIO18 <- thermal printer TXD (ESP U1RXD) [USED]
+GPIO14 -> physical trigger button to GND, INPUT_PULLUP [USED]
+
+GPIO38 -> built-in SD CMD [RESERVED]
+GPIO39 -> built-in SD CLK [RESERVED]
+GPIO40 -> built-in SD DATA [RESERVED]
+Built-in SD uses SD_MMC 1-bit mode.
+
+GPIO35/36/37 -> PSRAM [RESERVED]
+
+GPIO19 -> USB D+ [AVOID]
+GPIO20 -> USB D- [AVOID]
+GPIO0  -> BOOT [AVOID]
+
+GPIO43/44 -> UART0/debug [SYSTEM]
+GPIO2     -> onboard LED
+GPIO48    -> onboard WS2812
+
+Printer UART:
+1,500,000 baud, 8N1, 3.3 V TTL.
+
+Do not connect ESP32 TTL directly to RS-232.
+
+When adding hardware, do not reuse occupied or reserved pins unless the existing
+hardware design is intentionally changed.

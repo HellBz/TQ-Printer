@@ -1,0 +1,22 @@
+# Build outputs
+build/
+*.elf
+*.map
+*.bin
+*.merged.bin
+
+# Arduino CLI bundle (downloaded tool, can be re-fetched)
+arduino-cli.exe
+arduino-cli.zip
+
+# Backups
+*.bak
+
+# IDE / OS files
+.theia/
+.vscode/
+.idea/
+*.log
+nul
+Thumbs.db
+.DS_Store
