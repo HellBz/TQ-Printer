@@ -1832,28 +1832,9 @@ Upload a compiled firmware binary (.bin) over the air. The device will restart a
         );
     });
 
-    const saved =
-        localStorage.getItem(
-            'ticketPrinterSettingsTab'
-        );
-
-    const validTabs =
-    [
-        'general',
-        'wifi',
-        'mdns',
-        'printer',
-        'trigger',
-        'update'
-    ];
-
-    if (
-        saved &&
-        validTabs.includes(saved)
-    )
-    {
-        showTab(saved);
-    }
+    // Always start on the General tab so the settings page is predictable.
+    // Clicking a tab still updates localStorage, but the initial view resets.
+    localStorage.removeItem('ticketPrinterSettingsTab');
 })();
 </script>
 )rawliteral";
