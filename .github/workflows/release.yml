@@ -34,7 +34,15 @@ jobs:
           arduino-cli core install esp32:esp32 \
             --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
-      - name: Compile firmware
+      - name: Syntax check (compile without output)
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        run: |
+          arduino-cli compile \
+            --fqbn esp32:esp32:esp32s3 \
+            Thermal-Printer
+
+      - name: Compile firmware (release build)
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           arduino-cli compile \
             --fqbn esp32:esp32:esp32s3 \
