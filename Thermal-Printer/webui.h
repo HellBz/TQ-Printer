@@ -1542,6 +1542,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.13</b> &mdash; Release asset renamed to TQ-Printer.bin; supports static latest-release URL for OTA.</li>
 <li><b>2.9.12</b> &mdash; Improved GitHub link styling in the page footer.</li>
 <li><b>2.9.11</b> &mdash; OTA update can now be performed from a URL (e.g. GitHub release asset).</li>
 <li><b>2.9.10</b> &mdash; CI: normal commits now use --only-compilation-database for a faster syntax/build-database check.</li>
@@ -2759,7 +2760,7 @@ UPDATE FIRMWARE
 Enter a direct link to a compiled .bin file (e.g. a GitHub release asset).
 The device will download and install it automatically.
 </p>
-<input type="text" id="otaUrl" placeholder="https://github.com/.../TQ-Printer_v2.9.10.bin" style="width:100%;margin-bottom:12px;">
+<input type="text" id="otaUrl" value="https://github.com/HellBz/TQ-Printer/releases/latest/download/TQ-Printer.bin" placeholder="https://github.com/HellBz/TQ-Printer/releases/latest/download/TQ-Printer.bin" style="width:100%;margin-bottom:12px;">
 <button type="button" class="blue" onclick="updateFromUrl()">
 UPDATE FROM URL
 </button>

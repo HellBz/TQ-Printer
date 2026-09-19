@@ -54,14 +54,14 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
           mv build/Thermal-Printer.ino.bin \
-            "build/TQ-Printer_${{ github.ref_name }}.bin"
+            build/TQ-Printer.bin
 
       - name: Upload build artifact
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ github.sha }}
-          path: build/TQ-Printer_${{ github.ref_name }}.bin
+          path: build/TQ-Printer.bin
           if-no-files-found: error
 
   release:
@@ -78,10 +78,14 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release-assets/TQ-Printer_${{ github.ref_name }}.bin
+          files: release-assets/TQ-Printer.bin
           body: |
             Compiled firmware binary for **${{ github.ref_name }}**.
 
-            Flash via `/ota` in the Web-UI or with `python flash.py --port COMx`.
+            Flash via `/ota` in the Web-UI or use the static latest URL:
+
+            ```
+            https://github.com/HellBz/TQ-Printer/releases/latest/download/TQ-Printer.bin
+            ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

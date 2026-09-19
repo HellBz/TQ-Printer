@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 
-constexpr char FIRMWARE_VERSION[] = "2.9.12";
+constexpr char FIRMWARE_VERSION[] = "2.9.13";
 
 
 
