@@ -157,6 +157,15 @@ font-size:13px;
 line-height:1.7;
 flex-shrink:0;
 }
+.app-footer a{
+color:#d1d5db;
+text-decoration:none;
+font-weight:bold;
+}
+.app-footer a:hover{
+color:#fff;
+text-decoration:underline;
+}
 main{
 width:100%;
 max-width:900px;
@@ -1533,6 +1542,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.12</b> &mdash; Improved GitHub link styling in the page footer.</li>
 <li><b>2.9.11</b> &mdash; OTA update can now be performed from a URL (e.g. GitHub release asset).</li>
 <li><b>2.9.10</b> &mdash; CI: normal commits now use --only-compilation-database for a faster syntax/build-database check.</li>
 <li><b>2.9.9</b> &mdash; Added GitHub / Documentation link in the page footer.</li>
