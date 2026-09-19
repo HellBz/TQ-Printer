@@ -12,6 +12,12 @@ arduino-cli.zip
 # Backups
 *.bak
 
+# Local helper files (not part of the firmware repo)
+AGENTS.md
+flash.bat
+pinout-image-4-1.png
+ESP32-S3_Ticket_Printer_Pinout.txt
+
 # IDE / OS files
 .theia/
 .vscode/

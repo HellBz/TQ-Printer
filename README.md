@@ -21,7 +21,7 @@ ESP32-S3 based queue number / thermal printer firmware for the MY-Q805K.
 - **Trigger button:** GPIO14 (active low, internal pull-up)
 - **SD card (built-in):** GPIO38 CMD, GPIO39 CLK, GPIO40 DATA (1-bit SD_MMC)
 
-For a full pinout see [`ESP32-S3_Ticket_Printer_Pinout.txt`](ESP32-S3_Ticket_Printer_Pinout.txt).
+For a full pinout see the project documentation.
 
 ## Project structure
 
