@@ -43,12 +43,18 @@ jobs:
             --output-dir build \
             Thermal-Printer
 
+      - name: Rename firmware binary
+        if: github.event_name != 'pull_request'
+        run: |
+          mv build/Thermal-Printer.ino.bin \
+            "build/TQ-Printer_${{ github.ref_name }}.bin"
+
       - name: Upload build artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: firmware-${{ github.sha }}
-          path: build/Thermal-Printer.ino.bin
+          path: build/TQ-Printer_${{ github.ref_name }}.bin
           if-no-files-found: error
 
   release:
@@ -65,7 +71,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release-assets/Thermal-Printer.ino.bin
+          files: release-assets/TQ-Printer_${{ github.ref_name }}.bin
           body: |
             Compiled firmware binary for **${{ github.ref_name }}**.
 
