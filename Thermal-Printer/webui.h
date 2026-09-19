@@ -291,7 +291,7 @@ String pageFooter()
 
     html += R"rawliteral(</div>
 <div>ESP32-S3 &middot; ESC/POS</div>
-<div>GitHub / Documentation: not configured</div>
+<div><a href="https://github.com/HellBz/TQ-Printer">GitHub / Documentation</a></div>
 </footer>
 
 <script>
@@ -1531,6 +1531,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.9</b> &mdash; Added GitHub / Documentation link in the page footer.</li>
 <li><b>2.9.8</b> &mdash; Configurable print area roll width, HTML pages streamed in chunks, template preview page.</li>
 <li><b>2.9.7</b> &mdash; State-changing endpoints (delete, counter, print, orientation test) now require POST; security hardening.</li>
 <li><b>2.9.6</b> &mdash; Moved TQ-Printer branding into the fixed page header; dashboard title is now "Dashboard".</li>
