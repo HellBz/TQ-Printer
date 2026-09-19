@@ -89,7 +89,7 @@ String pageHeader(
 <meta charset="UTF-8">
 <meta name="viewport"
 content="width=device-width,initial-scale=1">
-<title>)rawliteral";
+<title>TQ-Printer - )rawliteral";
 
     html += htmlEscape(title);
 
@@ -382,7 +382,7 @@ void handleRoot()
     if (!requireAdmin()) return;
     HtmlBuffer html;
     html += pageHeader(
-        "TQ-Printer"
+        "Dashboard"
     );
 
     html += storageSummaryHTML(true);
@@ -1542,6 +1542,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.14</b> &mdash; HTML page titles now use "TQ-Printer - &lt;page&gt;" format.</li>
 <li><b>2.9.13</b> &mdash; Release asset renamed to TQ-Printer.bin; supports static latest-release URL for OTA.</li>
 <li><b>2.9.12</b> &mdash; Improved GitHub link styling in the page footer.</li>
 <li><b>2.9.11</b> &mdash; OTA update can now be performed from a URL (e.g. GitHub release asset).</li>
