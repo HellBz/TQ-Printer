@@ -95,6 +95,19 @@ void loadSettings()
             "qrSize",
             5
         );
+
+    pageWidth =
+        preferences.getUShort(
+            "pageWidth",
+            DEFAULT_PAGE_WIDTH
+        );
+
+    pageWidth =
+        constrain(
+            pageWidth,
+            static_cast<uint16_t>(48),
+            static_cast<uint16_t>(576)
+        );
 }
 
 

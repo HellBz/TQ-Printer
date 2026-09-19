@@ -745,7 +745,6 @@ bool getBMPDimensions(
 
 
 
-constexpr uint16_t MYQ_PAGE_WIDTH = 576;
 constexpr uint16_t MYQ_PAGE_MAX_HEIGHT = 1200;
 
 void myqWrite16(uint16_t value)
@@ -768,7 +767,7 @@ void myqPageBegin(uint16_t height)
 
     myqWrite16(0);
     myqWrite16(0);
-    myqWrite16(MYQ_PAGE_WIDTH);
+    myqWrite16(pageWidth);
     myqWrite16(height);
 
     Printer.write(0x00);
@@ -815,7 +814,7 @@ uint16_t myqEstimateTextWidth(
 
     return min<uint32_t>(
         width,
-        MYQ_PAGE_WIDTH
+        pageWidth
     );
 }
 
@@ -1081,7 +1080,7 @@ bool myqLoadBMPMono(
     width =
         min<int32_t>(
             bmpWidth,
-            MYQ_PAGE_WIDTH
+            pageWidth
         );
 
     height =
@@ -1484,19 +1483,19 @@ void executeTemplateReverseMYQ(
             {
                 normalX =
                     (
-                        MYQ_PAGE_WIDTH -
+                        pageWidth -
                         textWidth
                     ) / 2;
             }
             else if (alignment == "right")
             {
                 normalX =
-                    MYQ_PAGE_WIDTH -
+                    pageWidth -
                     textWidth;
             }
 
             uint16_t x =
-                MYQ_PAGE_WIDTH -
+                pageWidth -
                 normalX -
                 1;
 
@@ -1561,12 +1560,12 @@ void executeTemplateReverseMYQ(
 
             uint16_t normalX =
                 (
-                    MYQ_PAGE_WIDTH -
+                    pageWidth -
                     qrPixelSize
                 ) / 2;
 
             uint16_t x =
-                MYQ_PAGE_WIDTH -
+                pageWidth -
                 normalX -
                 1;
 
@@ -1609,12 +1608,12 @@ void executeTemplateReverseMYQ(
             {
                 uint16_t normalX =
                     (
-                        MYQ_PAGE_WIDTH -
+                        pageWidth -
                         width
                     ) / 2;
 
                 uint16_t x =
-                    MYQ_PAGE_WIDTH -
+                    pageWidth -
                     normalX -
                     1;
 

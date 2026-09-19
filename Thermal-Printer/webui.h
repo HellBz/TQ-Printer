@@ -16,6 +16,66 @@
 
 // HTTP API documentation: see API.md in this folder.
 
+class HtmlBuffer
+{
+public:
+    HtmlBuffer& operator+=(const String& s)
+    {
+        buffer += s;
+        flushIfNeeded();
+        return *this;
+    }
+
+    HtmlBuffer& operator+=(const char* s)
+    {
+        buffer += s;
+        flushIfNeeded();
+        return *this;
+    }
+
+    void send()
+    {
+        if (!started)
+        {
+            start();
+        }
+
+        if (buffer.length() > 0)
+        {
+            server.sendContent(buffer);
+            buffer.clear();
+        }
+
+        server.sendContent("");
+    }
+
+private:
+    String buffer;
+    bool started = false;
+    static constexpr size_t CHUNK_SIZE = 1024;
+
+    void start()
+    {
+        server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+        server.send(200, "text/html", "");
+        started = true;
+    }
+
+    void flushIfNeeded()
+    {
+        if (buffer.length() >= CHUNK_SIZE)
+        {
+            if (!started)
+            {
+                start();
+            }
+
+            server.sendContent(buffer);
+            buffer.clear();
+        }
+    }
+};
+
 String pageHeader(
     const String& title
 )
@@ -255,8 +315,8 @@ void sendSettingsSavedPage(
     uint16_t redirectDelayMs = 2000
 )
 {
-    String html =
-        pageHeader(title);
+    HtmlBuffer html;
+    html += pageHeader(title);
 
     html +=
         "<div class='card'>"
@@ -289,11 +349,7 @@ void sendSettingsSavedPage(
 
     html += pageFooter();
 
-    server.send(
-        200,
-        "text/html",
-        html
-    );
+    html.send();
 }
 
 void sendJsonResponse(
@@ -313,10 +369,10 @@ void sendJsonResponse(
 void handleRoot()
 {
     if (!requireAdmin()) return;
-    String html =
-        pageHeader(
-            "TQ-Printer"
-        );
+    HtmlBuffer html;
+    html += pageHeader(
+        "TQ-Printer"
+    );
 
     html += storageSummaryHTML(true);
 
@@ -598,11 +654,7 @@ async function resetCounter()
 
     html += pageFooter();
 
-    server.send(
-        200,
-        "text/html",
-        html
-    );
+    html.send();
 }
 
 
@@ -775,10 +827,10 @@ void handleTemplates()
     String content =
         loadTemplate(editName);
 
-    String html =
-        pageHeader(
-            "Templates"
-        );
+    HtmlBuffer html;
+    html += pageHeader(
+        "Templates"
+    );
 
     html +=
         "<div class='card'>"
@@ -829,6 +881,12 @@ SAVE TEMPLATE
 <button type="submit" class="red">DELETE TEMPLATE</button>
 </form>
 
+<a class="button blue" href="/template/preview?name=)rawliteral";
+
+    html +=
+        htmlEscape(editName) +
+        R"rawliteral(">PREVIEW TEMPLATE</a>
+
 <h3>Template commands</h3>
 
 <pre>
@@ -859,11 +917,286 @@ CUT
 
     html += pageFooter();
 
-    server.send(
-        200,
-        "text/html",
-        html
-    );
+    html.send();
+}
+
+bool getBMPDimensions(
+    const String& path,
+    int32_t& width,
+    int32_t& height
+);
+
+String previewTemplateHTML(
+    const String& content
+)
+{
+    const String date = "2024-01-01";
+    const String time = "12:00:00";
+    constexpr uint32_t ticketNumber = 12345;
+
+    String out =
+        "<table>"
+        "<tr><th>Element</th><th>Content / Parameters</th><th>Estimated height</th></tr>";
+
+    uint16_t totalHeight = 0;
+    int start = 0;
+
+    while (
+        start <
+        static_cast<int>(content.length())
+    )
+    {
+        int end =
+            content.indexOf(
+                '\n',
+                start
+            );
+
+        if (end < 0)
+        {
+            end = content.length();
+        }
+
+        String line =
+            content.substring(
+                start,
+                end
+            );
+
+        start = end + 1;
+        line.trim();
+
+        if (
+            line.length() == 0 ||
+            line.startsWith("#")
+        )
+        {
+            continue;
+        }
+
+        String element;
+        String detail;
+        uint16_t height = 0;
+
+        if (line.startsWith("TEXT|"))
+        {
+            int p1 =
+                line.indexOf(
+                    '|',
+                    5
+                );
+
+            int p2 =
+                line.indexOf(
+                    '|',
+                    p1 + 1
+                );
+
+            int p3 =
+                line.indexOf(
+                    '|',
+                    p2 + 1
+                );
+
+            if (
+                p1 < 0 ||
+                p2 < 0 ||
+                p3 < 0
+            )
+            {
+                element = "TEXT (invalid)";
+                detail = htmlEscape(line);
+            }
+            else
+            {
+                String alignment =
+                    line.substring(
+                        5,
+                        p1
+                    );
+
+                uint8_t size =
+                    line.substring(
+                        p1 + 1,
+                        p2
+                    ).toInt();
+
+                bool bold =
+                    line.substring(
+                        p2 + 1,
+                        p3
+                    ).toInt() != 0;
+
+                String text =
+                    replaceTemplateVariables(
+                        line.substring(p3 + 1),
+                        ticketNumber,
+                        date,
+                        time
+                    );
+
+                element =
+                    "TEXT size=" +
+                    String(size) +
+                    " bold=" +
+                    (
+                        bold
+                            ? "yes"
+                            : "no"
+                    ) +
+                    " align=" +
+                    alignment;
+
+                detail = htmlEscape(text);
+                height = 24 * size;
+            }
+        }
+        else if (line.startsWith("QR|"))
+        {
+            int separator =
+                line.indexOf(
+                    '|',
+                    3
+                );
+
+            uint8_t size =
+                line.substring(
+                    3,
+                    separator
+                ).toInt();
+
+            String data =
+                replaceTemplateVariables(
+                    line.substring(separator + 1),
+                    ticketNumber,
+                    date,
+                    time
+                );
+
+            element =
+                "QR size=" +
+                String(size);
+
+            detail = htmlEscape(data);
+            height =
+                static_cast<uint16_t>(
+                    17 + 4 * size * 3
+                );
+        }
+        else if (line.startsWith("IMAGE|"))
+        {
+            String filename =
+                line.substring(6);
+
+            filename.trim();
+
+            element = "IMAGE";
+            detail = htmlEscape(filename);
+
+            int32_t imageWidth = 0;
+            int32_t imageHeight = 0;
+
+            if (
+                getBMPDimensions(
+                    imagePath(filename),
+                    imageWidth,
+                    imageHeight
+                )
+            )
+            {
+                height =
+                    static_cast<uint16_t>(
+                        imageHeight
+                    );
+            }
+        }
+        else if (line.startsWith("FEED|"))
+        {
+            uint8_t lines =
+                line.substring(5).toInt();
+
+            element = "FEED";
+            detail = String(lines) + " line(s)";
+            height = lines * 12;
+        }
+        else if (line == "CUT")
+        {
+            element = "CUT";
+            detail = "Full cut";
+            height = 30;
+        }
+        else
+        {
+            element = "UNKNOWN";
+            detail = htmlEscape(line);
+        }
+
+        out +=
+            "<tr><td>" +
+            htmlEscape(element) +
+            "</td><td>" +
+            detail +
+            "</td><td>" +
+            String(height) +
+            " px</td></tr>";
+
+        totalHeight += height;
+    }
+
+    out +=
+        "</table>"
+        "<p><b>Total estimated height:</b> " +
+        String(totalHeight) +
+        " px</p>";
+
+    return out;
+}
+
+void handleTemplatePreview()
+{
+    if (!requireAdmin()) return;
+
+    String name =
+        server.arg("name");
+
+    if (name.length() == 0)
+    {
+        name = activeTemplate;
+    }
+
+    String content =
+        loadTemplate(name);
+
+    if (content.length() == 0)
+    {
+        server.send(
+            404,
+            "text/plain",
+            "Template not found"
+        );
+
+        return;
+    }
+
+    HtmlBuffer html;
+    html += pageHeader("Template Preview");
+    html +=
+        "<div class='card'>"
+        "<h1>Preview: " +
+        htmlEscape(name) +
+        "</h1>"
+        "<p class='small'>Sample values used: ticket number 12345, date 2024-01-01, time 12:00:00.</p>";
+
+    html += previewTemplateHTML(content);
+
+    html +=
+        "<a class='button blue' href='/templates?edit=" +
+        htmlEscape(name) +
+        "'>BACK TO EDITOR</a>"
+        "</div>";
+
+    html += pageFooter();
+    html.send();
 }
 
 bool getBMPDimensions(
@@ -916,10 +1249,10 @@ bool getBMPDimensions(
 void handleFiles()
 {
     if (!requireAdmin()) return;
-    String html =
-        pageHeader(
-            "Images / Files"
-        );
+    HtmlBuffer html;
+    html += pageHeader(
+        "Images / Files"
+    );
 
     html += storageSummaryHTML(false);
 
@@ -1160,11 +1493,7 @@ function uploadFile()
 
     html += pageFooter();
 
-    server.send(
-        200,
-        "text/html",
-        html
-    );
+    html.send();
 }
 
 
@@ -1172,10 +1501,10 @@ function uploadFile()
 void handleSettings()
 {
     if (!requireAdmin()) return;
-    String html =
-        pageHeader(
-            "Settings"
-        );
+    HtmlBuffer html;
+    html += pageHeader(
+        "Settings"
+    );
 
     html += R"rawliteral(
 <div class="settings-tabs">
@@ -1202,6 +1531,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.8</b> &mdash; Configurable print area roll width, HTML pages streamed in chunks, template preview page.</li>
 <li><b>2.9.7</b> &mdash; State-changing endpoints (delete, counter, print, orientation test) now require POST; security hardening.</li>
 <li><b>2.9.6</b> &mdash; Moved TQ-Printer branding into the fixed page header; dashboard title is now "Dashboard".</li>
 <li><b>2.9.5</b> &mdash; Renamed product branding to TQ-Printer across Web-UI, auth realm and documentation.</li>
@@ -1311,6 +1641,14 @@ void handleSettings()
     html += String(defaultQRSize);
 
     html += R"rawliteral(">
+
+<label>Print area width (dots)</label>
+<input type="number" name="pageWidth" min="48" max="576" step="8" value=")rawliteral";
+
+    html += String(pageWidth);
+
+    html += R"rawliteral(">
+<p class="small">576 dots = 80 mm roll, 384 dots = 58 mm roll. Must be a multiple of 8.</p>
 
 <label>Cutter</label>
 <select name="cutter">)rawliteral";
@@ -1522,11 +1860,7 @@ Upload a compiled firmware binary (.bin) over the air. The device will restart a
 
     html += pageFooter();
 
-    server.send(
-        200,
-        "text/html",
-        html
-    );
+    html.send();
 }
 
 
@@ -2407,8 +2741,8 @@ void handleOTA()
 {
     if (!requireAdmin()) return;
 
-    String html =
-        pageHeader("Firmware Update");
+    HtmlBuffer html;
+    html += pageHeader("Firmware Update");
 
     html += R"rawliteral(
 <div class="card">
@@ -2493,11 +2827,7 @@ function uploadFirmware()
 
     html += pageFooter();
 
-    server.send(
-        200,
-        "text/html",
-        html
-    );
+    html.send();
 }
 
 void handleOTAUploadData()
@@ -2939,6 +3269,25 @@ void handleSavePrinter()
         printOrientation
     );
 
+    pageWidth =
+        constrain(
+            server.arg(
+                "pageWidth"
+            ).toInt(),
+            48,
+            576
+        );
+
+    pageWidth =
+        pageWidth - (
+            pageWidth % 8
+        );
+
+    preferences.putUShort(
+        "pageWidth",
+        pageWidth
+    );
+
     Printer.end();
     delay(50);
 
@@ -3218,6 +3567,12 @@ void setupRoutes()
         "/template/delete",
         HTTP_POST,
         handleTemplateDelete
+    );
+
+    server.on(
+        "/template/preview",
+        HTTP_GET,
+        handleTemplatePreview
     );
 
     server.on(

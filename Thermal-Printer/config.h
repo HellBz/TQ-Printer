@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 
-constexpr char FIRMWARE_VERSION[] = "2.9.7";
+constexpr char FIRMWARE_VERSION[] = "2.9.8";
 
 
 
@@ -19,6 +19,9 @@ constexpr uint32_t DEFAULT_TRIGGER_DEBOUNCE_MS = 50;
 constexpr uint32_t DEFAULT_PRINTER_BAUD = 1500000;
 uint32_t printerBaud = DEFAULT_PRINTER_BAUD;
 constexpr uint32_t DEBUG_BAUD = 115200;
+
+constexpr uint16_t DEFAULT_PAGE_WIDTH = 576;
+uint16_t pageWidth = DEFAULT_PAGE_WIDTH;
 
 
 
