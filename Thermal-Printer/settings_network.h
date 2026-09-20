@@ -6,6 +6,35 @@
 #include "globals.h"
 
 
+static bool isConfigurablePin(
+    uint8_t pin
+)
+{
+    if (pin > 48)
+    {
+        return false;
+    }
+
+    switch (pin)
+    {
+        case 0:   // BOOT
+        case 19:  // USB D+
+        case 20:  // USB D-
+        case 35:
+        case 36:
+        case 37:  // PSRAM
+        case 38:  // SD_CMD
+        case 39:  // SD_CLK
+        case 40:  // SD_DATA
+        case 43:  // Debug TX
+        case 44:  // Debug RX
+            return false;
+        default:
+            return true;
+    }
+}
+
+
 void loadSettings()
 {
     ticketCounter =
@@ -108,6 +137,39 @@ void loadSettings()
             static_cast<uint16_t>(48),
             static_cast<uint16_t>(576)
         );
+
+    printerTxPin =
+        preferences.getUChar(
+            "printerTxPin",
+            PRINTER_TX_PIN
+        );
+
+    printerRxPin =
+        preferences.getUChar(
+            "printerRxPin",
+            PRINTER_RX_PIN
+        );
+
+    if (!isConfigurablePin(printerTxPin))
+    {
+        printerTxPin = PRINTER_TX_PIN;
+    }
+
+    if (!isConfigurablePin(printerRxPin))
+    {
+        printerRxPin = PRINTER_RX_PIN;
+    }
+
+    if (printerTxPin == printerRxPin)
+    {
+        printerTxPin = PRINTER_TX_PIN;
+        printerRxPin = PRINTER_RX_PIN;
+    }
+
+    if (!isConfigurablePin(triggerGPIO))
+    {
+        triggerGPIO = DEFAULT_TRIGGER_GPIO;
+    }
 }
 
 

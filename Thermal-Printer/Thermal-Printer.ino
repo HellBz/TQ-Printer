@@ -58,47 +58,6 @@ void setup()
     );
 
     // --------------------------------------------------------
-    // Button
-    // --------------------------------------------------------
-
-    configureTriggerGPIO();
-
-    // --------------------------------------------------------
-    // Printer UART
-    // --------------------------------------------------------
-
-    Printer.begin(
-        printerBaud,
-        SERIAL_8N1,
-        PRINTER_RX_PIN,
-        PRINTER_TX_PIN
-    );
-
-    Serial.print(
-        "Printer TX: GPIO"
-    );
-
-    Serial.println(
-        PRINTER_TX_PIN
-    );
-
-    Serial.print(
-        "Printer RX: GPIO"
-    );
-
-    Serial.println(
-        PRINTER_RX_PIN
-    );
-
-    Serial.print(
-        "Printer baud: "
-    );
-
-    Serial.println(
-        printerBaud
-    );
-
-    // --------------------------------------------------------
     // Preferences
     // --------------------------------------------------------
 
@@ -157,6 +116,47 @@ void setup()
 
 
     loadSettings();
+
+    // --------------------------------------------------------
+    // Button
+    // --------------------------------------------------------
+
+    configureTriggerGPIO();
+
+    // --------------------------------------------------------
+    // Printer UART
+    // --------------------------------------------------------
+
+    Printer.begin(
+        printerBaud,
+        SERIAL_8N1,
+        printerRxPin,
+        printerTxPin
+    );
+
+    Serial.print(
+        "Printer TX: GPIO"
+    );
+
+    Serial.println(
+        printerTxPin
+    );
+
+    Serial.print(
+        "Printer RX: GPIO"
+    );
+
+    Serial.println(
+        printerRxPin
+    );
+
+    Serial.print(
+        "Printer baud: "
+    );
+
+    Serial.println(
+        printerBaud
+    );
 
     // --------------------------------------------------------
     // Storage

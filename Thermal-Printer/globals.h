@@ -35,6 +35,9 @@ uint8_t feedLines = 4;
 uint8_t defaultQRSize = 5;
 String mdnsHostname = DEFAULT_MDNS_HOSTNAME;
 
+uint8_t printerTxPin = PRINTER_TX_PIN;
+uint8_t printerRxPin = PRINTER_RX_PIN;
+
 bool gpioTriggerEnabled = true;
 uint8_t triggerGPIO = DEFAULT_TRIGGER_GPIO;
 bool triggerActiveLow = true;

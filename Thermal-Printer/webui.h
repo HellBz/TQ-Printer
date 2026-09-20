@@ -1520,6 +1520,7 @@ void handleSettings()
 <a href="#" class="settings-tab" data-tab="mdns">mDNS</a>
 <a href="#" class="settings-tab" data-tab="printer">PRINTER</a>
 <a href="#" class="settings-tab" data-tab="trigger">TRIGGER</a>
+<a href="#" class="settings-tab" data-tab="pins">PINS</a>
 <a href="#" class="settings-tab" data-tab="update">UPDATE</a>
 </div>
 
@@ -1538,6 +1539,7 @@ void handleSettings()
 <div class="card">
 <h2>Changelog</h2>
 <ul class="small">
+<li><b>2.9.17</b> &mdash; New PINS settings tab: printer TX/RX and trigger GPIO are now configurable and persisted.</li>
 <li><b>2.9.16</b> &mdash; Version number shown only in the footer, not in the page header.</li>
 <li><b>2.9.15</b> &mdash; Split GitHub Actions into Syntax Check and Build/Release workflows.</li>
 <li><b>2.9.14</b> &mdash; HTML page titles now use "TQ-Printer - &lt;page&gt;" format.</li>
@@ -1721,13 +1723,6 @@ void handleSettings()
     html += R"rawliteral(
 </select>
 
-<label>GPIO pin</label>
-<input type="number" name="gpioPin" min="0" max="48" step="1" value=")rawliteral";
-
-    html += String(triggerGPIO);
-
-    html += R"rawliteral(">
-
 <label>Trigger level</label>
 <select name="activeLow">)rawliteral";
 
@@ -1796,6 +1791,38 @@ void handleSettings()
 
 <p class="small">Scanner hardware is not activated yet. These settings prepare validation for the next scanner implementation.</p>
 <button class="green">SAVE SCANNER SETTINGS</button>
+</form>
+</div>
+</div>
+
+<div id="settings-pins" class="settings-panel">
+<div class="card">
+<h2>Pin Configuration</h2>
+<p class="small">
+Pins marked as reserved cannot be changed: GPIO0 (BOOT), GPIO19/20 (USB),
+GPIO35-37 (PSRAM), GPIO38-40 (SD_MMC), GPIO43/44 (debug UART).
+</p>
+<form action="/settings/pins" method="post">
+<label>Printer TX pin</label>
+<input type="number" name="printerTxPin" min="0" max="48" value=")rawliteral";
+
+    html += String(printerTxPin);
+
+    html += R"rawliteral(">
+<label>Printer RX pin</label>
+<input type="number" name="printerRxPin" min="0" max="48" value=")rawliteral";
+
+    html += String(printerRxPin);
+
+    html += R"rawliteral(">
+<label>Trigger GPIO</label>
+<input type="number" name="triggerGPIO" min="0" max="48" value=")rawliteral";
+
+    html += String(triggerGPIO);
+
+    html += R"rawliteral(">
+
+<button class="green">SAVE PINS</button>
 </form>
 </div>
 </div>
@@ -3525,14 +3552,118 @@ void handleSavePrinter()
     Printer.begin(
         printerBaud,
         SERIAL_8N1,
-        PRINTER_RX_PIN,
-        PRINTER_TX_PIN
+        printerRxPin,
+        printerTxPin
     );
 
     sendSettingsSavedPage(
         "Printer settings saved",
         "Printer settings saved",
         "Printer configuration has been updated.",
+        false
+    );
+}
+
+void configureTriggerGPIO();
+
+void handleSavePins()
+{
+    if (!requireAdmin()) return;
+
+    int requestedTx =
+        server.arg(
+            "printerTxPin"
+        ).toInt();
+
+    int requestedRx =
+        server.arg(
+            "printerRxPin"
+        ).toInt();
+
+    int requestedTrigger =
+        server.arg(
+            "triggerGPIO"
+        ).toInt();
+
+    String error;
+
+    if (!isConfigurablePin(
+            static_cast<uint8_t>(requestedTx)
+        ))
+    {
+        error = "Printer TX pin is reserved or invalid.";
+    }
+    else if (!isConfigurablePin(
+                 static_cast<uint8_t>(requestedRx)
+             ))
+    {
+        error = "Printer RX pin is reserved or invalid.";
+    }
+    else if (!isConfigurablePin(
+                 static_cast<uint8_t>(requestedTrigger)
+             ))
+    {
+        error = "Trigger GPIO is reserved or invalid.";
+    }
+    else if (
+        requestedTx ==
+        requestedRx
+    )
+    {
+        error = "Printer TX and RX must be different pins.";
+    }
+
+    if (error.length() > 0)
+    {
+        server.send(
+            400,
+            "text/plain",
+            error
+        );
+
+        return;
+    }
+
+    printerTxPin =
+        static_cast<uint8_t>(requestedTx);
+
+    printerRxPin =
+        static_cast<uint8_t>(requestedRx);
+
+    triggerGPIO =
+        static_cast<uint8_t>(requestedTrigger);
+
+    preferences.putUChar(
+        "printerTxPin",
+        printerTxPin
+    );
+
+    preferences.putUChar(
+        "printerRxPin",
+        printerRxPin
+    );
+
+    preferences.putUChar(
+        "gpioPin",
+        triggerGPIO
+    );
+
+    Printer.end();
+    delay(50);
+
+    Printer.begin(
+        printerBaud,
+        SERIAL_8N1,
+        printerRxPin,
+        printerTxPin
+    );
+
+    configureTriggerGPIO();
+
+    sendSettingsSavedPage(
+        "Pins saved",
+        "Pin configuration saved",
+        "The pin configuration has been updated.",
         false
     );
 }
@@ -3616,18 +3747,21 @@ void handleSaveTrigger()
         gpioTriggerEnabled =
             server.arg("gpioEnabled") == "1";
 
-        int requestedPin =
-            server.arg("gpioPin").toInt();
-
-        if (
-            requestedPin >= 0 &&
-            requestedPin <= 48
-        )
+        if (server.hasArg("gpioPin"))
         {
-            triggerGPIO =
-                static_cast<uint8_t>(
-                    requestedPin
-                );
+            int requestedPin =
+                server.arg("gpioPin").toInt();
+
+            if (
+                requestedPin >= 0 &&
+                requestedPin <= 48
+            )
+            {
+                triggerGPIO =
+                    static_cast<uint8_t>(
+                        requestedPin
+                    );
+            }
         }
 
         triggerActiveLow =
@@ -3846,6 +3980,12 @@ void setupRoutes()
         "/settings/trigger",
         HTTP_POST,
         handleSaveTrigger
+    );
+
+    server.on(
+        "/settings/pins",
+        HTTP_POST,
+        handleSavePins
     );
 
     server.on(
